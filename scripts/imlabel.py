@@ -8,7 +8,7 @@ import matplotlib.image as mpimg
 import numpy as np
 
 imageDir = '../rs-materials/rs_resize_pics/tiled/'
-picRange = (1,1)
+picRange = (6,10)
 
 if picRange[1] < picRange[0]:
   print "Fix picRange so that first entry is >= second entry"
@@ -30,13 +30,23 @@ for currRGB in os.listdir(imageDir):
     plt.pause(1)
     raw_input()
     plt.close()
-    label = raw_input('Enter the image label: ')
-    print currRGB, 'was labeled as', label
+
+    validLabel = False
+    while not validLabel:
+      label = raw_input('Enter the image label: ')
+      print label
+      if label != str(0) and label != str(1) and label != 'u':
+        print 'Invalid label', label, ', try again'
+      else:
+        print currRGB, 'was labeled as', label
+        validLabel = True
+
     # Find corresponding depth image
     depthIm = currRGB.replace('rgb', 'd')
     newRGB = currRGB.replace('res', label)
     newDepth = newRGB.replace('rgb', 'd')
     os.rename(imageDir + currRGB, imageDir + newRGB)
     os.rename(imageDir + depthIm, imageDir + newDepth)
+    break
 
 print 'Done'
