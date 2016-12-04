@@ -1,63 +1,51 @@
+#! /usr/bin/python
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mimg
 import numpy as np
 
 from sklearn import datasets, svm, metrics
+from sklearn.model_selection import train_test_split
 
 # read all the tiled images in
 import glob
-test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
-folder_name = '../rs_resize_pics/tiled/*.bmp'
+# test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
+folder_name = '../rs-materials/rs_resize_pics/tiled/*.bmp'
 images_list = []
 labels_list = []
 for filename in glob.glob(folder_name):
-	if "rgb" not in filename:
-		continue
-	cur_rgb_image = plt.imread(filename)
-	vals = filename.split("_")
-	cur_label = vals[4]
-	depth = filename.replace("rgb", "d")
-	cur_depth_image = plt.imread(depth)
-	concat = np.append(cur_rgb_image, cur_depth_image)
-	
-	images_list.append(concat)
-	labels_list.append(cur_label)
+  if "rgb" not in filename:
+    continue
+  cur_rgb_image = plt.imread(filename)
+  vals = filename.split("_")
+  cur_label = vals[4]
+  depth = filename.replace("rgb", "d")
+  cur_depth_image = plt.imread(depth)
+  concat = np.append(cur_rgb_image, cur_depth_image)
 
-	
+  images_list.append(concat)
+  labels_list.append(cur_label)
 
+featArray = np.array(images_list)
+labelsArray = np.array(labels_list)
+numSamples = len(images_list)
 
-#images_and_labels = list(zip(digits.images, digits.target))
-#for index, (image, label) in enumerate(images_and_labels[:4]):
-#    plt.subplot(2, 4, index + 1)
-#    plt.axis('off')
- #   plt.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-#    plt.title('Training: %i' % label)
+Xtrain, Xtest, ytrain, ytest = train_test_split(
+  featArray, labelsArray, test_size=0.10, random_state=1)
 
-# To apply a classifier on this data, we need to flatten the image, to
-# turn the data in a (samples, feature) matrix:
-#n_samples = len(digits.images)
-#data = digits.images.reshape((n_samples, -1))
+print("Now training classifier")
 
 # Create a classifier: a support vector classifier
-#classifier = svm.SVC(gamma=0.001)
+classifier = svm.SVC(gamma=0.001)
 
-# We learn the digits on the first half of the digits
-#classifier.fit(data[:n_samples / 2], digits.target[:n_samples / 2])
+classifier.fit(Xtrain, ytrain)
 
-# Now predict the value of the digit on the second half:
-#expected = digits.target[n_samples / 2:]
-#predicted = classifier.predict(data[n_samples / 2:])
+print("Now predicting with classifier")
 
-#print("Classification report for classifier %s:\n%s\n"
-#      % (classifier, metrics.classification_report(expected, predicted)))
-#print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+expected = ytest
+predicted = classifier.predict(Xtest)
 
-#images_and_predictions = list(zip(digits.images[n_samples / 2:], predicted))
-#for index, (image, prediction) in enumerate(images_and_predictions[:4]):
-#    plt.subplot(2, 4, index + 5)
-#    plt.axis('off')
-#    plt.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-#    plt.title('Prediction: %i' % prediction)
+print("Classification report for classifier %s:\n%s\n"
+     % (classifier, metrics.classification_report(expected, predicted)))
+print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
 
-#plt.show()
