@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mimg
 import numpy as np
 
-from sklearn import datasets, svm, metrics
+from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
 
 # read all the tiled images in
 import glob
 # test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
-folder_name = '../rs-materials/rs_resize_pics/tiled/*.bmp'
+folder_name = '/home/rprabala/psych221/rs-materials/rs_resize_pics/tiled/*.bmp'
 images1_list = []
 labels1_list = []
 images0_list = []
@@ -41,16 +41,27 @@ labels1Array = np.array(labels1_list)
 
 numSamples = len(images0_list) + len(images1_list)
 
+argc = len(sys.argv)
+
+test0_size = 0.80
+test1_size = 0.20
+if argc == 3:
+	test0_size = float(sys.argv[1])
+	test1_size = float(sys.argv[2])
+
 X0train, X0test, y0train, y0test = train_test_split(
-  feat0Array, labels0Array, test_size=0.60)
+  feat0Array, labels0Array, test_size=test0_size)
 
 X1train, X1test, y1train, y1test = train_test_split(
-  feat1Array, labels1Array, test_size=0.20)
+  feat1Array, labels1Array, test_size=test1_size)
 
 print("Now training classifier")
 
 # Create a classifier: a support vector classifier
-classifier = svm.SVC(C=2, gamma=0.01)
+#classifier = svm.SVC(C=2, gamma=0.01)
+#classifier = linear_model.LogisticRegression(solver='lbfgs')
+#classifier = linear_model.LogisticRegression()
+classifier = ensemble.RandomForestClassifier()
 
 print 'label0', labels0Array.shape
 print 'label0train', y0train.shape
