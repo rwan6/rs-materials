@@ -190,6 +190,7 @@ void Streaming::StreamSamples() {
                         // save image to file
                         if (save) {
                             save = false;
+                            static int count = 0;
                             PXCImage::ImageData colorData = PXCImage::ImageData();
                             if (image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB24, &colorData) >= PXC_STATUS_NO_ERROR) {
                                 auto colorPitch = colorData.pitches[0] / sizeof(pxcBYTE);
@@ -200,6 +201,7 @@ void Streaming::StreamSamples() {
                                 CLSID bmpClsid;
                                 int ret = GetEncoderClsid(L"image/bmp", &bmpClsid);
                                 assert(ret != -1);
+                                count++;
                                 bmp->Save(L"D:/Richard/Desktop/test.bmp", &bmpClsid, NULL);
                                 delete bmp;
                                 Gdiplus::GdiplusShutdown(gdiplusToken);
