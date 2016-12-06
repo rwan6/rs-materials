@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 
-imageDir = '../rs_resize_pics/tiled/'
-picRange = (1,5)
+imageDir = '../rs-materials/rs_res_sr_pics/tiled/'
+picRange = (1,1)
 
 if picRange[1] < picRange[0]:
   print "Fix picRange so that first entry is >= second entry"
@@ -41,11 +41,14 @@ for currRGB in os.listdir(imageDir):
         print currRGB, 'was labeled as', label
         validLabel = True
 
-    # Find corresponding depth image
+    # Find corresponding depth and ir image
     depthIm = currRGB.replace('rgb', 'd')
+    irIm = currRGB.replace('rgb', 'ir')
     newRGB = currRGB.replace('res', label)
     newDepth = newRGB.replace('rgb', 'd')
+    newIr = newRGB.replace('rgb', 'ir')
     os.rename(imageDir + currRGB, imageDir + newRGB)
     os.rename(imageDir + depthIm, imageDir + newDepth)
+    os.rename(imageDir + irIm, imageDir + newIr)
 
 print 'Done'
