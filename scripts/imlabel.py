@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 
-imageDir = '../rs-materials/rs_res_sr_pics/tiled/'
-picRange = (1,1)
+imageDir = '../rs_res_sr_pics/tiled/'
+picRange = (1,2)
 
 if picRange[1] < picRange[0]:
   print "Fix picRange so that first entry is >= second entry"
