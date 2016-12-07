@@ -9,10 +9,9 @@ import numpy as np
 from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
 
-# test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 folder_name = '../rs-materials/rs_res_sr_pics/tiled/*.bmp'
-def main(classif, test0_size, test1_size, types):
+def main(classif, test0_size, test1_size, types, svmc):
   # Read in tiled images
   images1_list = []
   labels1_list = []
@@ -72,7 +71,7 @@ def main(classif, test0_size, test1_size, types):
 
   # Create a classifier: a support vector classifier
   if classif == 'svm':
-    classifier = svm.LinearSVC(C=3)
+    classifier = svm.LinearSVC(svmc)
   elif classif == 'lr':
     #classifier = linear_model.LogisticRegression(solver='lbfgs')
     classifier = linear_model.LogisticRegression()
@@ -94,12 +93,14 @@ if __name__ == '__main__':
   ap = argparse.ArgumentParser()
   ap.add_argument('--c', default='svm',
                   help='Classifier options: svm, lr, rfc. Default is svm.')
-  ap.add_argument('--t0', type=float, default=0.80,
-                  help='Test0 size. Default is 0.80.')
+  ap.add_argument('--t0', type=float, default=0.20,
+                  help='Test0 size. Default is 0.20.')
   ap.add_argument('--t1', type=float, default=0.20,
                   help='Test1 size. Default is 0.20.')
+  ap.add_argument('--svmc', type=float, default=3.0,
+  				        help='C-parameter for svm. Default is 3.')
   ap.add_argument('--type', nargs='+', default="rgb",
-  				  help='All types of data to be included.')
+  				        help='All types of data to be included. Separate by spaces.')
 
   args = ap.parse_args()
 
@@ -114,5 +115,5 @@ if __name__ == '__main__':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
 
-  main(args.c, args.t0, args.t1, args.type)
+  main(args.c, args.t0, args.t1, args.type, args.svmc)
 
