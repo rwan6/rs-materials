@@ -22,75 +22,58 @@ def main(classif, test0_size, test1_size):
   images1_map = {}
   images0_map = {}
 
+  type_list = []
   types = args.type.split("_")
+  if "rgb" in types:
+    type_list.append("rgb")
+  if "d" in types:
+    type_list.append("d")
+  if "ir" in types:
+    type_list.append("ir")
+  
+  for filename in sorted(glob.glob(folder_name)):
+    #if "rgb" not in filename:
+    #    continue
+    if type_list[0] not in filename:
+        continue
+    vals = filename.split("/")
+    image_name = vals[len(vals) - 1]
+    tokens = image_name.split("_")
+    cur_label = tokens[2]
+    cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
+    cur_type = tokens[1]
+
+
+    # If we don't want this particular input, continue
+    #if cur_type not in types:
+    #	continue
+
+    # If this is not labeled, or unknown label, continue
+    if cur_label == "res" or cur_label == "u":
+    	continue
+    cur_image = plt.imread(filename)
+    cur_np_arr = np.ndarray.flatten(cur_image)
+    #cur_np_arr = np.append(cur_image, cur_d_image)
+    for i in range(1,len(type_list)):
+        #print filename.replace(type_list[0], type_list[i])
+        cur_np_arr = np.append(cur_np_arr, plt.imread(filename.replace(type_list[0], type_list[i])))
+
+    if cur_label == '0':
+        images0_list.append(cur_np_arr)
+        labels0_list.append(cur_label)
+    else:
+        images1_list.append(cur_np_arr)
+        labels1_list.append(cur_label)
+
+
   
 
-  for filename in sorted(glob.glob(folder_name)):
-    if "rgb" in types and "rgb" not in filename:
-        continue
-    vals = filename.split("/")
-    image_name = vals[len(vals) - 1]
-    tokens = image_name.split("_")
-    cur_label = tokens[2]
-    cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
-    cur_type = tokens[1]
 
 
-    # If we don't want this particular input, continue
-    if cur_type not in types:
-    	continue
-
-    # If this is not labeled, or unknown label, continue
-    if cur_label == "res" or cur_label == "u":
-    	continue
-    cur_image = plt.imread(filename)
-    if cur_label == "0":
-        if cur_key not in images0_map.keys():
-            images0_map[cur_key] = np.ndarray.flatten(cur_image)
-        else:
-            images0_map[cur_key] = np.append(images0_map[cur_key], cur_image)
-    else:
-        if cur_key not in images1_map.keys():
-            images1_map[cur_key] = np.ndarray.flatten(cur_image)
-        else:
-            images1_map[cur_key] = np.append(images1_map[cur_key], cur_image)
-
-  for filename in sorted(glob.glob(folder_name)):
-    if "d" in types and "d" not in filename:
-        continue
-    vals = filename.split("/")
-    image_name = vals[len(vals) - 1]
-    tokens = image_name.split("_")
-    cur_label = tokens[2]
-    cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
-    cur_type = tokens[1]
-
-
-    # If we don't want this particular input, continue
-    if cur_type not in types:
-        continue
-
-    # If this is not labeled, or unknown label, continue
-    if cur_label == "res" or cur_label == "u":
-        continue
-    cur_image = plt.imread(filename)
-    if cur_label == "0":
-        if cur_key not in images0_map.keys():
-            images0_map[cur_key] = np.ndarray.flatten(cur_image)
-        else:
-            images0_map[cur_key] = np.append(images0_map[cur_key], cur_image)
-    else:
-        if cur_key not in images1_map.keys():
-            images1_map[cur_key] = np.ndarray.flatten(cur_image)
-        else:
-            images1_map[cur_key] = np.append(images1_map[cur_key], cur_image)
-
-
-
-  images0_list = images0_map.values()
-  images1_list = images1_map.values()
-  labels0_list = np.zeros(len(images0_map))
-  labels1_list = np.ones(len(images1_map))
+  #images0_list = images0_map.values()
+  #images1_list = images1_map.values()
+  #labels0_list = np.zeros(len(images0_list))
+  #labels1_list = np.ones(len(images1_list))
 
   feat0Array = np.array(images0_list)
   labels0Array = np.array(labels0_list)
