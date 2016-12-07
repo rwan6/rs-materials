@@ -10,30 +10,87 @@ from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
 
 # test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
-folder_name = '../rs-materials/rs_resize_pics/tiled/*.bmp'
-
+#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
+folder_name = '../rs_resize_pics/tiled/*.bmp'
 def main(classif, test0_size, test1_size):
   # Read in tiled images
   images1_list = []
   labels1_list = []
   images0_list = []
   labels0_list = []
-  for filename in glob.glob(folder_name):
-    if "rgb" not in filename:
-      continue
-    cur_rgb_image = plt.imread(filename)
-    vals = filename.split("_")
-    cur_label = vals[4]
-    depth = filename.replace("rgb", "d")
-    cur_depth_image = plt.imread(depth)
-    concat = np.append(cur_rgb_image, cur_depth_image)
 
-    if cur_label == '0':
-    	images0_list.append(concat)
-    	labels0_list.append(cur_label)
+  images1_map = {}
+  images0_map = {}
+
+  types = args.type.split("_")
+  
+
+  for filename in sorted(glob.glob(folder_name)):
+    if "rgb" in types and "rgb" not in filename:
+        continue
+    vals = filename.split("/")
+    image_name = vals[len(vals) - 1]
+    tokens = image_name.split("_")
+    cur_label = tokens[2]
+    cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
+    cur_type = tokens[1]
+
+
+    # If we don't want this particular input, continue
+    if cur_type not in types:
+    	continue
+
+    # If this is not labeled, or unknown label, continue
+    if cur_label == "res" or cur_label == "u":
+    	continue
+    cur_image = plt.imread(filename)
+    if cur_label == "0":
+        if cur_key not in images0_map.keys():
+            images0_map[cur_key] = np.ndarray.flatten(cur_image)
+        else:
+            images0_map[cur_key] = np.append(images0_map[cur_key], cur_image)
     else:
-    	images1_list.append(concat)
-    	labels1_list.append(cur_label)
+        if cur_key not in images1_map.keys():
+            images1_map[cur_key] = np.ndarray.flatten(cur_image)
+        else:
+            images1_map[cur_key] = np.append(images1_map[cur_key], cur_image)
+
+  for filename in sorted(glob.glob(folder_name)):
+    if "d" in types and "d" not in filename:
+        continue
+    vals = filename.split("/")
+    image_name = vals[len(vals) - 1]
+    tokens = image_name.split("_")
+    cur_label = tokens[2]
+    cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
+    cur_type = tokens[1]
+
+
+    # If we don't want this particular input, continue
+    if cur_type not in types:
+        continue
+
+    # If this is not labeled, or unknown label, continue
+    if cur_label == "res" or cur_label == "u":
+        continue
+    cur_image = plt.imread(filename)
+    if cur_label == "0":
+        if cur_key not in images0_map.keys():
+            images0_map[cur_key] = np.ndarray.flatten(cur_image)
+        else:
+            images0_map[cur_key] = np.append(images0_map[cur_key], cur_image)
+    else:
+        if cur_key not in images1_map.keys():
+            images1_map[cur_key] = np.ndarray.flatten(cur_image)
+        else:
+            images1_map[cur_key] = np.append(images1_map[cur_key], cur_image)
+
+
+
+  images0_list = images0_map.values()
+  images1_list = images1_map.values()
+  labels0_list = np.zeros(len(images0_map))
+  labels1_list = np.ones(len(images1_map))
 
   feat0Array = np.array(images0_list)
   labels0Array = np.array(labels0_list)
@@ -44,10 +101,10 @@ def main(classif, test0_size, test1_size):
   numSamples = len(images0_list) + len(images1_list)
 
   X0train, X0test, y0train, y0test = train_test_split(
-    feat0Array, labels0Array, test_size=test0_size)
+    feat0Array, labels0Array, test_size=test0_size, random_state=1234)
 
   X1train, X1test, y1train, y1test = train_test_split(
-    feat1Array, labels1Array, test_size=test1_size)
+    feat1Array, labels1Array, test_size=test1_size, random_state=1234)
 
   print 'label0 total size:', labels0Array.shape
   print 'label0train size:', y0train.shape
@@ -59,7 +116,7 @@ def main(classif, test0_size, test1_size):
   if classif == 'svm':
     classifier = svm.LinearSVC(C=1.5)
   elif classif == 'lr':
-    # classifier = linear_model.LogisticRegression(solver='lbfgs')
+    #classifier = linear_model.LogisticRegression(solver='lbfgs')
     classifier = linear_model.LogisticRegression()
   else: # Must be rfc
     classifier = ensemble.RandomForestClassifier()
@@ -83,6 +140,9 @@ if __name__ == '__main__':
                   help='Test0 size. Default is 0.80.')
   ap.add_argument('--t1', type=float, default=0.20,
                   help='Test1 size. Default is 0.20.')
+  ap.add_argument('--type', default="rgb",
+  				  help='All types of data to be included, separated by a _')
+
   args = ap.parse_args()
   
   # Simple error checking
