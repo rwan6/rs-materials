@@ -11,10 +11,9 @@ import matplotlib.ticker as plticker
 from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
 try:
-    from PIL import Image
+  from PIL import Image
 except ImportError:
-    import Image
-# test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
+  import Image
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
 folder = '../rs_res_sr_pics/'
@@ -26,7 +25,6 @@ labels0_list = []
 
 images1_map = {}
 images0_map = {}
-
 
 heatmap0_list = []
 heatmap1_list = []
@@ -41,10 +39,10 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 	   if expected[i] != predicted[i]:
 	     incorrect_files.append(file_tracker_list[i])
     for i in range(0, len(predicted)):
-        if predicted[i] == "1":
-	  		skin_files.append(file_tracker_list[i])
-        if expected[i] == "1":
-            true_skin_files.append(file_tracker_list[i])
+      if predicted[i] == "1":
+    		skin_files.append(file_tracker_list[i])
+      if expected[i] == "1":
+        true_skin_files.append(file_tracker_list[i])
 
 	pic_strings = ["pic" + s for s in pics]
 	my_dpi = 200
@@ -78,9 +76,9 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 
     # Add some labels to the grid
     for j in range(ny):
-        y=yInterval/2.+j*yInterval
+        y = yInterval/2.+j*yInterval
         for i in range(nx):
-            x=xInterval/2.+float(i)*xInterval
+            x = xInterval/2.+float(i)*xInterval
             ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
     
     for j in range(ny):
@@ -102,12 +100,9 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
                     overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,0,255]
 
 
-
-
     plt.hold(True)
     plt.imshow(overlay, alpha=.2)
     plt.show()
-
 
 def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
@@ -121,10 +116,10 @@ def heatmap_images(types, pics):
     cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
     cur_type = tokens[1]
     if types[0] not in image_name:
-        continue
+      continue
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
-        continue
+      continue
 
     cur_image = plt.imread(filename)
     cur_np_arr = np.ndarray.flatten(cur_image)
@@ -136,7 +131,6 @@ def heatmap_images(types, pics):
       if tokens[0] in pic_strings:
         heatmap0_list.append(cur_np_arr)
         file_tracker_list.append(image_name)
-
       else:
         images0_list.append(cur_np_arr)
         labels0_list.append(cur_label)
@@ -147,7 +141,6 @@ def heatmap_images(types, pics):
       else:
         images1_list.append(cur_np_arr)
         labels1_list.append(cur_label)
-
 
 def process_images(types):
   for filename in sorted(glob.glob(folder_name)):
@@ -162,7 +155,7 @@ def process_images(types):
 
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
-        continue
+      continue
 
     cur_image = plt.imread(filename)
     cur_np_arr = np.ndarray.flatten(cur_image)
@@ -192,6 +185,28 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
 
   numSamples = len(images0_list) + len(images1_list)
 
+  if len(pics) == 0:
+    X0train, X0test, y0train, y0test = train_test_split(
+      feat0Array, labels0Array, test_size=test0_size) #, random_state=1234)
+
+    X1train, X1test, y1train, y1test = train_test_split(
+      feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
+      
+  else:
+    X0train = feat0Array
+    X1train = feat1Array
+    y1train = labels1Array
+    y0train = labels0Array
+
+    X1test = np.array(heatmap1_list)
+    X0test = np.array(heatmap0_list)
+    y0test = ["0" for s in range(0,len(X0test))]
+    y1test = ["1" for s in range(0,len(X1test))]
+    
+  if len(X0test) == 0 or len(X1test) == 0:
+    print 'Test set is all 0 or all 1. Now exiting...'
+    sys.exit(0)
+
   # Create a classifier: a support vector classifier
   if classif == 'svm':
     classifier = svm.LinearSVC(svmc)
@@ -201,32 +216,11 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
   else: # Must be rfc
     classifier = ensemble.RandomForestClassifier()
 
-  if len(pics) == 0:
-      X0train, X0test, y0train, y0test = train_test_split(
-        feat0Array, labels0Array, test_size=test0_size) #, random_state=1234)
-
-      X1train, X1test, y1train, y1test = train_test_split(
-        feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
-
-      
-  else:
-      X0train = feat0Array
-      X1train = feat1Array
-      y1train = labels1Array
-      y0train = labels0Array
-
-      X1test = np.array(heatmap1_list)
-      X0test = np.array(heatmap0_list)
-      y0test = ["0" for s in range(0,len(X0test))]
-      y1test = ["1" for s in range(0,len(X1test))]
-
-
   print 'label0 total size:', labels0Array.shape
   print 'label0train size:', y0train.shape
   print 'label1 total size:', labels1Array.shape
   print 'label1train size:', y1train.shape
   print 'Now training classifier'
-
 
   classifier.fit(np.concatenate((X0train, X1train)), \
     np.concatenate((y0train, y1train)))
@@ -235,7 +229,6 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
   expected = np.concatenate((y0test, y1test))
   predicted = classifier.predict(np.concatenate((X0test, X1test)))
   
-
   print 'Classification report for classifier %s:\n%s\n' \
        % (classifier, metrics.classification_report(expected, predicted))
   print 'Confusion matrix:\n%s' % metrics.confusion_matrix(expected, predicted)
@@ -259,7 +252,7 @@ if __name__ == '__main__':
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
   ap.add_argument('--hm', default="a",
-                    help='Type of heatmap: a, s')
+                  help='Type of heatmap: a, s')
 
   args = ap.parse_args()
 
