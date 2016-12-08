@@ -10,24 +10,12 @@ import numpy as np
 import matplotlib.ticker as plticker
 from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
-<<<<<<< HEAD
 try:
     from PIL import Image
 except ImportError:
     import Image
 # test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
-=======
-
-#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
-folder_name = '../rs-materials/rs_res_sr_pics/tiled/*.bmp'
-def main(classif, test0_size, test1_size, types, svmc):
-  # Read in tiled images
-  images1_list = []
-  labels1_list = []
-  images0_list = []
-  labels0_list = []
->>>>>>> 0c526556af4952448e916dac3215432f1584dc9a
 
 folder = '../rs_res_sr_pics/'
 folder_name = os.path.join(folder, "tiled", "*.bmp")
@@ -45,10 +33,22 @@ heatmap1_list = []
 
 file_tracker_list = []
 
-def draw_heatmap(pics, file_tracker_list, incorrect_files):
-    pic_strings = ["pic" + s for s in pics]
-    my_dpi = 200
-    orig_filename = os.path.join(folder, pic_strings[0]+ "_rgb_res.bmp")
+def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
+    incorrect_files = []
+    skin_files = []
+    true_skin_files = []
+    for i in range(0, len(expected)):
+	   if expected[i] != predicted[i]:
+	     incorrect_files.append(file_tracker_list[i])
+    for i in range(0, len(predicted)):
+        if predicted[i] == "1":
+	  		skin_files.append(file_tracker_list[i])
+        if expected[i] == "1":
+            true_skin_files.append(file_tracker_list[i])
+
+	pic_strings = ["pic" + s for s in pics]
+	my_dpi = 200
+	orig_filename = os.path.join(folder, pic_strings[0]+ "_rgb_res.bmp")
     image = Image.open(orig_filename)
     fig=plt.figure(figsize=(float(image.size[0])/my_dpi,float(image.size[1])/my_dpi),dpi=my_dpi)
     ax=fig.add_subplot(111)
@@ -68,30 +68,44 @@ def draw_heatmap(pics, file_tracker_list, incorrect_files):
 
     ax.imshow(image)
 
-    # Find number of gridsquares in x and y direction
     nx=abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
     ny=abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
     
-    print incorrect_files
+    print skin_files
+
     print nx, ny
     overlay = np.zeros((400, 600,3), dtype=np.uint8)
 
-    # Add some labels to the gridsquares
+    # Add some labels to the grid
     for j in range(ny):
         y=yInterval/2.+j*yInterval
         for i in range(nx):
-            assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), str(j*10+i))) + ".bmp"
-            assoc1_filename = "_".join((pic_strings[0], "rgb", "1", str(j), str(j*10+i))) + ".bmp"
-            if assoc1_filename in incorrect_files or assoc0_filename in incorrect_files:
-                #print "error"
-                overlay[j*40:(j+1)*40,i*60:(i+1)*60] = [255,0,0]
-            else:
-             #   print "no error"
-                overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
             x=xInterval/2.+float(i)*xInterval
             ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
+    
+    for j in range(ny):
+    	for i in range(nx):
+            assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), str(j*10+i))) + ".bmp"
+            assoc1_filename = "_".join((pic_strings[0], "rgb", "1", str(j), str(j*10+i))) + ".bmp"
+
+    	    if hm == 'a':
+	            if assoc1_filename in incorrect_files or assoc0_filename in incorrect_files:
+	               overlay[j*40:(j+1)*40,i*60:(i+1)*60] = [255,0,0]
+	            else:
+	                overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
+            elif hm == 's':
+                if assoc1_filename in skin_files:
+   		            overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
+                elif assoc0_filename in skin_files:
+   				    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [255,0,0]
+                elif assoc1_filename in true_skin_files:
+                    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,0,255]
+
+
+
+
     plt.hold(True)
-    plt.imshow(overlay, alpha=.1)
+    plt.imshow(overlay, alpha=.2)
     plt.show()
 
 
@@ -99,15 +113,15 @@ def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
 
   for filename in sorted(glob.glob(folder_name)):
-    if types[0] not in filename:
-        continue
+    
     vals = filename.split("/")
     image_name = vals[len(vals) - 1]
     tokens = image_name.split("_")
     cur_label = tokens[2]
     cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
     cur_type = tokens[1]
-
+    if types[0] not in image_name:
+        continue
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
         continue
@@ -163,7 +177,7 @@ def process_images(types):
       images1_list.append(cur_np_arr)
       labels1_list.append(cur_label)
 
-def main(classif, test0_size, test1_size, types, pics):
+def main(classif, test0_size, test1_size, types, svmc, pics, hm):
   # Read in tiled images
   if len(pics) == 0:
     process_images(types)
@@ -220,12 +234,6 @@ def main(classif, test0_size, test1_size, types, pics):
   print 'Now predicting with classifier'
   expected = np.concatenate((y0test, y1test))
   predicted = classifier.predict(np.concatenate((X0test, X1test)))
-
-  incorrect_files = []
-  for i in range(0, len(expected)):
-    if expected[i] != predicted[i]:
-      incorrect_files.append(file_tracker_list[i])
-
   
 
   print 'Classification report for classifier %s:\n%s\n' \
@@ -233,7 +241,7 @@ def main(classif, test0_size, test1_size, types, pics):
   print 'Confusion matrix:\n%s' % metrics.confusion_matrix(expected, predicted)
 
   if len(pics) != 0:
-    draw_heatmap(pics, file_tracker_list, incorrect_files)
+    draw_heatmap(pics, file_tracker_list, expected, predicted, hm)
 
 
 if __name__ == '__main__':
@@ -250,6 +258,8 @@ if __name__ == '__main__':
                   help='Picture numbers to heatmap')
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
+  ap.add_argument('--hm', default="a",
+                    help='Type of heatmap: a, s, b')
 
   args = ap.parse_args()
 
@@ -264,9 +274,5 @@ if __name__ == '__main__':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
 
-<<<<<<< HEAD
-  main(args.c, args.t0, args.t1, args.type, args.pic)
-=======
-  main(args.c, args.t0, args.t1, args.type, args.svmc)
->>>>>>> 0c526556af4952448e916dac3215432f1584dc9a
+  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm)
 
