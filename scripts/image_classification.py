@@ -10,12 +10,24 @@ import numpy as np
 import matplotlib.ticker as plticker
 from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
+<<<<<<< HEAD
 try:
     from PIL import Image
 except ImportError:
     import Image
 # test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
+=======
+
+#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
+folder_name = '../rs-materials/rs_res_sr_pics/tiled/*.bmp'
+def main(classif, test0_size, test1_size, types, svmc):
+  # Read in tiled images
+  images1_list = []
+  labels1_list = []
+  images0_list = []
+  labels0_list = []
+>>>>>>> 0c526556af4952448e916dac3215432f1584dc9a
 
 folder = '../rs_res_sr_pics/'
 folder_name = os.path.join(folder, "tiled", "*.bmp")
@@ -168,7 +180,7 @@ def main(classif, test0_size, test1_size, types, pics):
 
   # Create a classifier: a support vector classifier
   if classif == 'svm':
-    classifier = svm.LinearSVC(C=3)
+    classifier = svm.LinearSVC(svmc)
   elif classif == 'lr':
     #classifier = linear_model.LogisticRegression(solver='lbfgs')
     classifier = linear_model.LogisticRegression()
@@ -228,14 +240,16 @@ if __name__ == '__main__':
   ap = argparse.ArgumentParser()
   ap.add_argument('--c', default='svm',
                   help='Classifier options: svm, lr, rfc. Default is svm.')
-  ap.add_argument('--t0', type=float, default=0.80,
-                  help='Test0 size. Default is 0.80.')
+  ap.add_argument('--t0', type=float, default=0.20,
+                  help='Test0 size. Default is 0.20.')
   ap.add_argument('--t1', type=float, default=0.20,
                   help='Test1 size. Default is 0.20.')
   ap.add_argument('--type', nargs='+', default="",
   				  help='All types of data to be included.')
   ap.add_argument('--pic', nargs='+', default="", 
                   help='Picture numbers to heatmap')
+  ap.add_argument('--svmc', type=float, default=3.0,
+  				        help='C-parameter for svm. Default is 3.')
 
   args = ap.parse_args()
 
@@ -250,5 +264,9 @@ if __name__ == '__main__':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
 
+<<<<<<< HEAD
   main(args.c, args.t0, args.t1, args.type, args.pic)
+=======
+  main(args.c, args.t0, args.t1, args.type, args.svmc)
+>>>>>>> 0c526556af4952448e916dac3215432f1584dc9a
 
