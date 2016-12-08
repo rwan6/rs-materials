@@ -18,6 +18,7 @@ except ImportError:
 
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 folder = '../rs-materials/rs_res_sr_pics/'
+# folder = '../rs-materials/rs_resize_pics/'
 folder_name = os.path.join(folder, "tiled", "*.bmp")
 images1_list = []
 labels1_list = []
@@ -196,15 +197,6 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
 
   numSamples = len(images0_list) + len(images1_list)
 
-  # Create a classifier: a support vector classifier
-  if classif == 'svm':
-    classifier = svm.LinearSVC(svmc)
-  elif classif == 'lr':
-    #classifier = linear_model.LogisticRegression(solver='lbfgs')
-    classifier = linear_model.LogisticRegression()
-  else: # Must be rfc
-    classifier = ensemble.RandomForestClassifier()
-
   if len(pics) == 0:
     X0train, X0test, y0train, y0test = train_test_split(
       feat0Array, labels0Array, test_size=test0_size) #, random_state=1234)
@@ -222,12 +214,26 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     X0test = np.array(heatmap0_list)
     y0test = ["0" for s in range(0,len(X0test))]
     y1test = ["1" for s in range(0,len(X1test))]
+  
+  # If image is all one type, exit
+  if len(X0test) == 0 or len(X1test) == 0:
+    print 'Testing data is all zeros or all ones. Now exiting.'
+    sys.exit(0)
 
   print 'label0 total size:', labels0Array.shape
   print 'label0train size:', y0train.shape
   print 'label1 total size:', labels1Array.shape
   print 'label1train size:', y1train.shape
   print 'Now training classifier'
+  
+  # Create a classifier: a support vector classifier
+  if classif == 'svm':
+    classifier = svm.LinearSVC(svmc)
+  elif classif == 'lr':
+    #classifier = linear_model.LogisticRegression(solver='lbfgs')
+    classifier = linear_model.LogisticRegression()
+  else: # Must be rfc
+    classifier = ensemble.RandomForestClassifier()
 
   classifier.fit(np.concatenate((X0train, X1train)), \
     np.concatenate((y0train, y1train)))
