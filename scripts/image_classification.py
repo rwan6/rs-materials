@@ -259,7 +259,7 @@ if __name__ == '__main__':
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
   ap.add_argument('--hm', default="a",
-                    help='Type of heatmap: a, s, b')
+                    help='Type of heatmap: a, s')
 
   args = ap.parse_args()
 
