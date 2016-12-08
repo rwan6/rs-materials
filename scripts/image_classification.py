@@ -10,13 +10,13 @@ import numpy as np
 import matplotlib.ticker as plticker
 from sklearn import datasets, svm, metrics, linear_model, ensemble
 from sklearn.model_selection import train_test_split
-try:
-    from PIL import Image
-except ImportError:
-    import Image
-# test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
-#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
+try:
+  from PIL import Image
+except ImportError:
+  import Image
+
+#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 folder = '../rs-materials/rs_res_sr_pics/'
 folder_name = os.path.join(folder, "tiled", "*.bmp")
 images1_list = []
@@ -26,7 +26,6 @@ labels0_list = []
 
 images1_map = {}
 images0_map = {}
-
 
 heatmap0_list = []
 heatmap1_list = []
@@ -71,8 +70,8 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 
   ax.imshow(image)
 
-  nx=abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
-  ny=abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
+  nx = abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
+  ny = abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
   
   print skin_files
 
@@ -122,8 +121,10 @@ def heatmap_images(types, pics):
     cur_label = tokens[2]
     cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
     cur_type = tokens[1]
+    
     if types[0] not in image_name:
       continue
+
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
       continue
@@ -155,14 +156,14 @@ def heatmap_images(types, pics):
 def process_images(types):
   for filename in sorted(glob.glob(folder_name)):
     if types[0] not in filename:
-       continue
+      continue
     vals = filename.split("/")
     image_name = vals[len(vals) - 1]
     tokens = image_name.split("_")
     cur_label = tokens[2]
     cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
     cur_type = tokens[1]
-
+    
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
       continue
@@ -211,7 +212,6 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     X1train, X1test, y1train, y1test = train_test_split(
       feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
 
-      
   else:
     X0train = feat0Array
     X1train = feat1Array
@@ -223,23 +223,18 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     y0test = ["0" for s in range(0,len(X0test))]
     y1test = ["1" for s in range(0,len(X1test))]
 
-
   print 'label0 total size:', labels0Array.shape
   print 'label0train size:', y0train.shape
   print 'label1 total size:', labels1Array.shape
   print 'label1train size:', y1train.shape
   print 'Now training classifier'
 
-
   classifier.fit(np.concatenate((X0train, X1train)), \
     np.concatenate((y0train, y1train)))
 
   print 'Now predicting with classifier'
-  print X0test.shape
-  print X1test.shape
   expected = np.concatenate((y0test, y1test))
   predicted = classifier.predict(np.concatenate((X0test, X1test)))
-  
 
   print 'Classification report for classifier %s:\n%s\n' \
        % (classifier, metrics.classification_report(expected, predicted))
@@ -259,7 +254,7 @@ if __name__ == '__main__':
                   help='Test1 size. Default is 0.20.')
   ap.add_argument('--type', nargs='+', required=True,
   				  help='All types of data to be included.')
-  ap.add_argument('--pic', nargs='+', required=True, 
+  ap.add_argument('--pic', nargs='+', default=[], 
                   help='Picture numbers to heatmap.')
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
