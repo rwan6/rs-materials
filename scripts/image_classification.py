@@ -17,7 +17,7 @@ except ImportError:
 # test = mimg.imread("/home/rprabala/Downloads/pic_2.bmp")
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
-folder = '../rs_res_sr_pics/'
+folder = '../rs-materials/rs_res_sr_pics/'
 folder_name = os.path.join(folder, "tiled", "*.bmp")
 images1_list = []
 labels1_list = []
@@ -34,86 +34,88 @@ heatmap1_list = []
 file_tracker_list = []
 
 def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
-    incorrect_files = []
-    skin_files = []
-    true_skin_files = []
-    for i in range(0, len(expected)):
-	   if expected[i] != predicted[i]:
-	     incorrect_files.append(file_tracker_list[i])
-    for i in range(0, len(predicted)):
-        if predicted[i] == "1":
-	  		skin_files.append(file_tracker_list[i])
-        if expected[i] == "1":
-            true_skin_files.append(file_tracker_list[i])
+  incorrect_files = []
+  skin_files = []
+  true_skin_files = []
+  for i in range(0, len(expected)):
+	  if expected[i] != predicted[i]:
+	    incorrect_files.append(file_tracker_list[i])
 
-	pic_strings = ["pic" + s for s in pics]
-	my_dpi = 200
-	orig_filename = os.path.join(folder, pic_strings[0]+ "_rgb_res.bmp")
-    image = Image.open(orig_filename)
-    fig=plt.figure(figsize=(float(image.size[0])/my_dpi,float(image.size[1])/my_dpi),dpi=my_dpi)
-    ax=fig.add_subplot(111)
+  for i in range(0, len(predicted)):
+    if predicted[i] == "1":
+  	  skin_files.append(file_tracker_list[i])
+    if expected[i] == "1":
+      true_skin_files.append(file_tracker_list[i])
 
-    # Remove whitespace from around the image
-    fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
+  pic_strings = ["pic" + s for s in pics]
+  my_dpi = 200
+  orig_filename = os.path.join(folder, pic_strings[0]+ "_rgb_res.bmp")
+  image = Image.open(orig_filename)
+  fig = plt.figure(figsize=(float(image.size[0])/my_dpi, \
+    float(image.size[1])/my_dpi),dpi=my_dpi)
+  
+  ax = fig.add_subplot(111)
 
-    yInterval = 40.
-    xInterval = 60.
-    yloc = plticker.MultipleLocator(base=xInterval)
-    xloc = plticker.MultipleLocator(base=yInterval)
+  # Remove whitespace from around the image
+  fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
 
-    ax.xaxis.set_major_locator(yloc)
-    ax.yaxis.set_major_locator(xloc)
+  yInterval = 40.
+  xInterval = 60.
+  yloc = plticker.MultipleLocator(base=xInterval)
+  xloc = plticker.MultipleLocator(base=yInterval)
 
-    ax.grid(which='major', axis='both', linestyle='-')
+  ax.xaxis.set_major_locator(yloc)
+  ax.yaxis.set_major_locator(xloc)
 
-    ax.imshow(image)
+  ax.grid(which='major', axis='both', linestyle='-')
 
-    nx=abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
-    ny=abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
+  ax.imshow(image)
+
+  nx=abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
+  ny=abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
+  
+  print skin_files
+
+  print nx, ny
+  overlay = np.zeros((400, 600,3), dtype=np.uint8)
+
+  # Add some labels to the grid
+  for j in range(ny):
+    y = yInterval/2.+j*yInterval
+    for i in range(nx):
+      x = xInterval/2.+float(i)*xInterval
+      ax.text(x,y,'({:d},{:d})'.format(j,i),color='w', \
+        ha='center',va='center', size=5)
     
-    print skin_files
+  for j in range(ny):
+    for i in range(nx):
+      assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), \
+       str(j*10+i))) + ".bmp"
+      assoc1_filename = "_".join((pic_strings[0], "rgb", "1", str(j), \
+       str(j*10+i))) + ".bmp"
 
-    print nx, ny
-    overlay = np.zeros((400, 600,3), dtype=np.uint8)
-
-    # Add some labels to the grid
-    for j in range(ny):
-        y=yInterval/2.+j*yInterval
-        for i in range(nx):
-            x=xInterval/2.+float(i)*xInterval
-            ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
-    
-    for j in range(ny):
-    	for i in range(nx):
-            assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), str(j*10+i))) + ".bmp"
-            assoc1_filename = "_".join((pic_strings[0], "rgb", "1", str(j), str(j*10+i))) + ".bmp"
-
-    	    if hm == 'a':
-	            if assoc1_filename in incorrect_files or assoc0_filename in incorrect_files:
-	               overlay[j*40:(j+1)*40,i*60:(i+1)*60] = [255,0,0]
-	            else:
-	                overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
-            elif hm == 's':
-                if assoc1_filename in skin_files:
-   		            overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
-                elif assoc0_filename in skin_files:
-   				    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [255,0,0]
-                elif assoc1_filename in true_skin_files:
-                    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,0,255]
-
-
-
+      if hm == 'a':
+        if assoc1_filename in incorrect_files or \
+        assoc0_filename in incorrect_files:
+          overlay[j*40:(j+1)*40,i*60:(i+1)*60] = [255,0,0]
+        else:
+          overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
+      elif hm == 's':
+        if assoc1_filename in skin_files:
+	         overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
+        elif assoc0_filename in skin_files:
+			    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [255,0,0]
+        elif assoc1_filename in true_skin_files:
+          overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,0,255]
 
     plt.hold(True)
     plt.imshow(overlay, alpha=.2)
     plt.show()
 
-
 def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
 
   for filename in sorted(glob.glob(folder_name)):
-    
     vals = filename.split("/")
     image_name = vals[len(vals) - 1]
     tokens = image_name.split("_")
@@ -121,16 +123,17 @@ def heatmap_images(types, pics):
     cur_key = "_".join((tokens[0], tokens[3], tokens[4]))
     cur_type = tokens[1]
     if types[0] not in image_name:
-        continue
+      continue
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
-        continue
+      continue
 
     cur_image = plt.imread(filename)
     cur_np_arr = np.ndarray.flatten(cur_image)
     for i in range(1,len(types)):
       cur_np_arr = np.append(cur_np_arr, \
-        plt.imread(os.path.join(folder, "tiled", image_name.replace(types[0], types[i]))))
+        plt.imread(os.path.join(folder, "tiled", \
+        image_name.replace(types[0], types[i]))))
 
     if cur_label == '0':
       if tokens[0] in pic_strings:
@@ -152,7 +155,7 @@ def heatmap_images(types, pics):
 def process_images(types):
   for filename in sorted(glob.glob(folder_name)):
     if types[0] not in filename:
-        continue
+       continue
     vals = filename.split("/")
     image_name = vals[len(vals) - 1]
     tokens = image_name.split("_")
@@ -162,7 +165,7 @@ def process_images(types):
 
     # If this is not labeled, or unknown label, continue
     if cur_label == "res" or cur_label == "u":
-        continue
+      continue
 
     cur_image = plt.imread(filename)
     cur_np_arr = np.ndarray.flatten(cur_image)
@@ -202,23 +205,23 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     classifier = ensemble.RandomForestClassifier()
 
   if len(pics) == 0:
-      X0train, X0test, y0train, y0test = train_test_split(
-        feat0Array, labels0Array, test_size=test0_size) #, random_state=1234)
+    X0train, X0test, y0train, y0test = train_test_split(
+      feat0Array, labels0Array, test_size=test0_size) #, random_state=1234)
 
-      X1train, X1test, y1train, y1test = train_test_split(
-        feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
+    X1train, X1test, y1train, y1test = train_test_split(
+      feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
 
       
   else:
-      X0train = feat0Array
-      X1train = feat1Array
-      y1train = labels1Array
-      y0train = labels0Array
+    X0train = feat0Array
+    X1train = feat1Array
+    y1train = labels1Array
+    y0train = labels0Array
 
-      X1test = np.array(heatmap1_list)
-      X0test = np.array(heatmap0_list)
-      y0test = ["0" for s in range(0,len(X0test))]
-      y1test = ["1" for s in range(0,len(X1test))]
+    X1test = np.array(heatmap1_list)
+    X0test = np.array(heatmap0_list)
+    y0test = ["0" for s in range(0,len(X0test))]
+    y1test = ["1" for s in range(0,len(X1test))]
 
 
   print 'label0 total size:', labels0Array.shape
@@ -232,6 +235,8 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     np.concatenate((y0train, y1train)))
 
   print 'Now predicting with classifier'
+  print X0test.shape
+  print X1test.shape
   expected = np.concatenate((y0test, y1test))
   predicted = classifier.predict(np.concatenate((X0test, X1test)))
   
@@ -252,14 +257,14 @@ if __name__ == '__main__':
                   help='Test0 size. Default is 0.20.')
   ap.add_argument('--t1', type=float, default=0.20,
                   help='Test1 size. Default is 0.20.')
-  ap.add_argument('--type', nargs='+', default="",
+  ap.add_argument('--type', nargs='+', required=True,
   				  help='All types of data to be included.')
-  ap.add_argument('--pic', nargs='+', default="", 
-                  help='Picture numbers to heatmap')
+  ap.add_argument('--pic', nargs='+', required=True, 
+                  help='Picture numbers to heatmap.')
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
   ap.add_argument('--hm', default="a",
-                    help='Type of heatmap: a, s')
+                  help='Type of heatmap: a, s')
 
   args = ap.parse_args()
 
