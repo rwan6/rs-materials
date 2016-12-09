@@ -68,7 +68,7 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 
     nx=abs(int(float(ax.get_xlim()[1]-ax.get_xlim()[0])/float(xInterval)))
     ny=abs(int(float(ax.get_ylim()[1]-ax.get_ylim()[0])/float(yInterval)))
-    
+
     print skin_files
 
     print nx, ny
@@ -80,7 +80,7 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
         for i in range(nx):
             x = xInterval/2.+float(i)*xInterval
             ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
-    
+
     for j in range(ny):
     	for i in range(nx):
             assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), str(j*10+i))) + ".bmp"
@@ -108,7 +108,7 @@ def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
 
   for filename in sorted(glob.glob(folder_name)):
-    
+
     vals = filename.split("/")
     image_name = vals[len(vals) - 1]
     tokens = image_name.split("_")
@@ -170,13 +170,50 @@ def process_images(types):
       images1_list.append(cur_np_arr)
       labels1_list.append(cur_label)
 
-def main(classif, test0_size, test1_size, types, svmc, pics, hm):
+def tuneSVM(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test):
+  losses = ['hinge', 'squared_hinge']
+  penalties = ['l1', 'l2']
+  duals = [True, False]
+  Cs = np.logspace(-2, 2, num=15)
+
+  for l in losses:
+    for p in penalties:
+      for d in duals:
+        for c in Cs:
+          classifier = svm.LinearSVC(penalty=p, loss=l, dual=d, C=c)
+          classifier.fit(np.concatenate((X0train, X1train)), np.concatenate((y0train, y1train)))
+          expected = np.concatenate((y0test, y1test))
+          predicted = classifier.predict(np.concatenate((X0test, X1test)))
+          print 'Classification report for %s %s %d %f:\n%s\n' % (l, p, d, c, metrics.classification_report(expected, predicted))
+
+def tuneLR(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test):
+  classifiers = ['newton-cg', 'lbfgs', 'liblinear', 'sag']
+  penalties = ['l2']
+  multi_classes = ['ovr', 'multinomial']
+  Cs = np.logspace(-2, 2, num=15)
+
+  for cf in classifiers:
+    for p in penalties:
+      for mc in multi_classes:
+        for c in Cs:
+          if p == 'l1' and cf != 'liblinear':
+            continue
+          if mc == 'multinomial' and cf == 'liblinear':
+            continue
+
+          classifier = linear_model.LogisticRegression(penalty=p, C=c, solver=cf, multi_class=mc, n_jobs=-1)
+          classifier.fit(np.concatenate((X0train, X1train)), np.concatenate((y0train, y1train)))
+          expected = np.concatenate((y0test, y1test))
+          predicted = classifier.predict(np.concatenate((X0test, X1test)))
+          print 'Classification report for %s %s %f %s:\n%s\n' % (cf, p, c, mc, metrics.classification_report(expected, predicted))
+
+def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
   # Read in tiled images
   if len(pics) == 0:
     process_images(types)
   else:
     heatmap_images(types, pics)
-  
+
   feat0Array = np.array(images0_list)
   labels0Array = np.array(labels0_list)
 
@@ -191,7 +228,7 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
 
     X1train, X1test, y1train, y1test = train_test_split(
       feat1Array, labels1Array, test_size=test1_size) #, random_state=1234)
-      
+
   else:
     X0train = feat0Array
     X1train = feat1Array
@@ -202,7 +239,7 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
     X0test = np.array(heatmap0_list)
     y0test = ["0" for s in range(0,len(X0test))]
     y1test = ["1" for s in range(0,len(X1test))]
-    
+
   if len(X0test) == 0 or len(X1test) == 0:
     print 'Test set is all 0 or all 1. Now exiting...'
     sys.exit(0)
@@ -211,7 +248,6 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
   if classif == 'svm':
     classifier = svm.LinearSVC(svmc)
   elif classif == 'lr':
-    #classifier = linear_model.LogisticRegression(solver='lbfgs')
     classifier = linear_model.LogisticRegression()
   else: # Must be rfc
     classifier = ensemble.RandomForestClassifier()
@@ -222,13 +258,22 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm):
   print 'label1train size:', y1train.shape
   print 'Now training classifier'
 
+  if tune:
+    if tune == 'lr':
+      tuneLR(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test)
+    elif tune == 'svm':
+      tuneSVM(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test)
+    else:
+      return
+    return
+
   classifier.fit(np.concatenate((X0train, X1train)), \
     np.concatenate((y0train, y1train)))
 
   print 'Now predicting with classifier'
   expected = np.concatenate((y0test, y1test))
   predicted = classifier.predict(np.concatenate((X0test, X1test)))
-  
+
   print 'Classification report for classifier %s:\n%s\n' \
        % (classifier, metrics.classification_report(expected, predicted))
   print 'Confusion matrix:\n%s' % metrics.confusion_matrix(expected, predicted)
@@ -247,12 +292,14 @@ if __name__ == '__main__':
                   help='Test1 size. Default is 0.20.')
   ap.add_argument('--type', nargs='+', default="",
   				  help='All types of data to be included.')
-  ap.add_argument('--pic', nargs='+', default="", 
+  ap.add_argument('--pic', nargs='+', default="",
                   help='Picture numbers to heatmap')
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
   ap.add_argument('--hm', default="a",
                   help='Type of heatmap: a, s')
+  ap.add_argument('--tune', default='',
+                    help='Classifier to tune')
 
   args = ap.parse_args()
 
@@ -266,6 +313,9 @@ if __name__ == '__main__':
   if args.c != 'svm' and args.c != 'lr' and args.c != 'rfc':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
+  if args.tune not in ['lr', 'svm', 'rf']:
+    print 'Unexpected tuning type'
+    sys.exit(1)
 
-  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm)
+  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm, args.tune)
 
