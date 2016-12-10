@@ -83,20 +83,21 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 
     for j in range(ny):
     	for i in range(nx):
-            assoc0_filename = "_".join((pic_strings[0], "rgb", "0", str(j), str(j*10+i))) + ".bmp"
-            assoc1_filename = "_".join((pic_strings[0], "rgb", "1", str(j), str(j*10+i))) + ".bmp"
+            files_list = ["_".join((pic_strings[0], s, labelgen, str(j), str(j*10+i))) + ".bmp" for s in ["rgb", "d", "ir"] for labelgen in ["0", "1"]] 
+    	    ones_list = [x for x in files_list for g in ["rgb_1_", "d_1_", "ir_1_"] if g in x]
+            zeros_list = [x for x in files_list for g in ["rgb_0_", "d_0_", "ir_0_"] if g in x ]
 
-    	    if hm == 'a':
-	            if assoc1_filename in incorrect_files or assoc0_filename in incorrect_files:
+            if hm == 'a':
+	            if any(this_file in incorrect_files for this_file in files_list):
 	               overlay[j*40:(j+1)*40,i*60:(i+1)*60] = [255,0,0]
 	            else:
 	                overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
             elif hm == 's':
-                if assoc1_filename in skin_files:
+                if any(x in skin_files for x in ones_list):
    		            overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,255,0]
-                elif assoc0_filename in skin_files:
+                elif any(x in skin_files for x in zeros_list):
    				    overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [255,0,0]
-                elif assoc1_filename in true_skin_files:
+                elif any(x in true_skin_files for x in ones_list):
                     overlay[(j*40):(j+1)*40 - 1, i*60:(i+1)*60 -1] = [0,0,255]
 
 
@@ -250,7 +251,7 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
   elif classif == 'lr':
     classifier = linear_model.LogisticRegression()
   else: # Must be rfc
-    classifier = ensemble.RandomForestClassifier()
+    classifier = ensemble.RandomForestClassifier(n_estimators=500)
 
   print 'label0 total size:', labels0Array.shape
   print 'label0train size:', y0train.shape
@@ -313,7 +314,7 @@ if __name__ == '__main__':
   if args.c != 'svm' and args.c != 'lr' and args.c != 'rfc':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
-  if args.tune not in ['lr', 'svm', 'rf']:
+  if args.tune not in ['lr', 'svm', 'rf', '']:
     print 'Unexpected tuning type'
     sys.exit(1)
 
