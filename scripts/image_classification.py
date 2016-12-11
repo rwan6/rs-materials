@@ -264,8 +264,6 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
       tuneLR(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test)
     elif tune == 'svm':
       tuneSVM(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test)
-    else:
-      return
     return
 
   classifier.fit(np.concatenate((X0train, X1train)), \
@@ -314,7 +312,7 @@ if __name__ == '__main__':
   if args.c != 'svm' and args.c != 'lr' and args.c != 'rfc':
     print 'Classifier options: svm, lr, rfc'
     sys.exit(1)
-  if args.tune not in ['lr', 'svm', 'rf', '']:
+  if args.tune not in ['lr', 'svm', 'rfc', '']:
     print 'Unexpected tuning type'
     sys.exit(1)
 
