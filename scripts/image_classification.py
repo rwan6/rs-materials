@@ -16,8 +16,9 @@ except ImportError:
   import Image
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
+subfolder = "tiled"
 folder = '../rs_res_sr_pics/'
-folder_name = os.path.join(folder, "tiled", "*.bmp")
+folder_name = os.path.join(folder, subfolder, "*.bmp")
 images1_list = []
 labels1_list = []
 images0_list = []
@@ -79,7 +80,7 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
         y = yInterval/2.+j*yInterval
         for i in range(nx):
             x = xInterval/2.+float(i)*xInterval
-            ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
+            #ax.text(x,y,'({:d},{:d})'.format(j,i),color='w',ha='center',va='center', size=5)
 
     for j in range(ny):
     	for i in range(nx):
@@ -126,7 +127,7 @@ def heatmap_images(types, pics):
     cur_np_arr = np.ndarray.flatten(cur_image)
     for i in range(1,len(types)):
       cur_np_arr = np.append(cur_np_arr, \
-        plt.imread(os.path.join(folder, "tiled", image_name.replace(types[0], types[i]))))
+        plt.imread(os.path.join(folder, subfolder, image_name.replace(types[0], types[i]))))
 
     if cur_label == '0':
       if tokens[0] in pic_strings:
@@ -247,7 +248,7 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
 
   # Create a classifier: a support vector classifier
   if classif == 'svm':
-    classifier = svm.LinearSVC(svmc)
+    classifier = svm.LinearSVC(C=svmc)
   elif classif == 'lr':
     classifier = linear_model.LogisticRegression()
   else: # Must be rfc
