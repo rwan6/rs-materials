@@ -17,7 +17,9 @@ except ImportError:
 #folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
 subfolder = "tiled"
-folder = '../rs_res_sr_pics/'
+resultsDir = "../rs-materials/scripts/results/"
+# folder = '../rs_res_sr_pics/'
+folder = '../rs-materials/rs_res_sr_pics/'
 folder_name = os.path.join(folder, subfolder, "*.bmp")
 images1_list = []
 labels1_list = []
@@ -105,10 +107,11 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types):
     plt.hold(True)
     plt.imshow(overlay, alpha=.2)
     if save:
-        outfile = "results/" + '_'.join((pic_strings[0], '_'.join(types))) + ".jpg"
-        fig.savefig(outfile)
+      outfile = resultsDir + '_'.join((pic_strings[0], '_'.join(types))) + \
+       ".jpg"
+      fig.savefig(outfile)
     else:
-        plt.show()
+      plt.show()
 
 def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
@@ -285,27 +288,38 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune, save):
   if len(pics) != 0:
     draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types)
 
+  if save:
+    pic_strings = ["pic" + s for s in pics]
+    outfile = resultsDir + '_'.join((pic_strings[0], '_'.join(types))) + ".txt"
+ 
+    of = open(outfile,'w')
+    of.write(metrics.classification_report(expected, predicted))
+    of.write('\n\n')
+    conf_matr = metrics.confusion_matrix(expected, predicted)
+    of.write(str(conf_matr))
+    of.close()
+
 
 if __name__ == '__main__':
   ap = argparse.ArgumentParser()
-  ap.add_argument('--c', default='svm',
-                  help='Classifier options: svm, lr, rfc. Default is svm.')
+  ap.add_argument('--c', default='rfc',
+                  help='Classifier options: svm, lr, rfc. Default is rfc.')
   ap.add_argument('--t0', type=float, default=0.20,
                   help='Test0 size. Default is 0.20.')
   ap.add_argument('--t1', type=float, default=0.20,
                   help='Test1 size. Default is 0.20.')
-  ap.add_argument('--type', nargs='+', default="",
+  ap.add_argument('--type', nargs='+', required=True,
   				  help='All types of data to be included.')
   ap.add_argument('--pic', nargs='+', default="",
                   help='Picture numbers to heatmap')
   ap.add_argument('--svmc', type=float, default=3.0,
   				        help='C-parameter for svm. Default is 3.')
-  ap.add_argument('--hm', default="a",
-                  help='Type of heatmap: a, s')
+  ap.add_argument('--hm', default="s",
+                  help='Type of heatmap: a, s. Default is s.')
   ap.add_argument('--tune', default='',
                     help='Classifier to tune')
   ap.add_argument('--save', type=bool, default=False,
-                  help='Save the image/logs.')
+                  help='Save the image/logs. Default is False')
 
   args = ap.parse_args()
 
@@ -323,5 +337,6 @@ if __name__ == '__main__':
     print 'Unexpected tuning type'
     sys.exit(1)
 
-  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm, args.tune, args.save)
+  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm, \
+   args.tune, args.save)
 
