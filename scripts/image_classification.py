@@ -32,7 +32,7 @@ heatmap1_list = []
 
 file_tracker_list = []
 
-def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
+def draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types):
     incorrect_files = []
     skin_files = []
     true_skin_files = []
@@ -104,7 +104,11 @@ def draw_heatmap(pics, file_tracker_list, expected, predicted, hm):
 
     plt.hold(True)
     plt.imshow(overlay, alpha=.2)
-    plt.show()
+    if save:
+        outfile = "results/" + '_'.join((pic_strings[0], '_'.join(types))) + ".jpg"
+        fig.savefig(outfile)
+    else:
+        plt.show()
 
 def heatmap_images(types, pics):
   pic_strings = ["pic" + s for s in pics]
@@ -209,7 +213,7 @@ def tuneLR(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test):
           predicted = classifier.predict(np.concatenate((X0test, X1test)))
           print 'Classification report for %s %s %f %s:\n%s\n' % (cf, p, c, mc, metrics.classification_report(expected, predicted))
 
-def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
+def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune, save):
   # Read in tiled images
   if len(pics) == 0:
     process_images(types)
@@ -279,7 +283,7 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune):
   print 'Confusion matrix:\n%s' % metrics.confusion_matrix(expected, predicted)
 
   if len(pics) != 0:
-    draw_heatmap(pics, file_tracker_list, expected, predicted, hm)
+    draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types)
 
 
 if __name__ == '__main__':
@@ -300,6 +304,8 @@ if __name__ == '__main__':
                   help='Type of heatmap: a, s')
   ap.add_argument('--tune', default='',
                     help='Classifier to tune')
+  ap.add_argument('--save', type=bool, default=False,
+                  help='Save the image/logs.')
 
   args = ap.parse_args()
 
@@ -317,5 +323,5 @@ if __name__ == '__main__':
     print 'Unexpected tuning type'
     sys.exit(1)
 
-  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm, args.tune)
+  main(args.c, args.t0, args.t1, args.type, args.svmc, args.pic, args.hm, args.tune, args.save)
 
