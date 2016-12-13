@@ -8,7 +8,7 @@ import operator
 import matplotlib.pyplot as plt
 import numpy as np
 
-resDir = "../rs-materials/scripts/results_lr/"
+resDir = "../rs-materials/scripts/results_sr/"
 # Key: type, Value: [0:p, 0:r, 0:f1, 1:p, 1:r, 1:f1]
 resMap = {}
 
@@ -39,6 +39,11 @@ for resFile in glob.glob(resDir + 'crossvalid*.txt'):
 
 ind = np.arange(2)
 width = 0.25
+font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 16}
+
+matplotlib.rc('font', **font)
 
 for k in resMap.keys():
   fig, ax = plt.subplots()
