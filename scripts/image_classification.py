@@ -14,10 +14,9 @@ try:
   from PIL import Image
 except ImportError:
   import Image
-#folder_name = '../rs_res_sr_pics/tiled/*.bmp'
 
 subfolder = "tiled"
-resultsDir = "../rs-materials/scripts/results/"
+resultsDir = "../rs-materials/scripts/results_sr/"
 # folder = '../rs_res_sr_pics/'
 folder = '../rs-materials/rs_res_sr_pics/'
 folder_name = os.path.join(folder, subfolder, "*.bmp")
@@ -289,16 +288,19 @@ def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune, save):
     draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types)
 
   if save:
-    pic_strings = ["pic" + s for s in pics]
-    outfile = resultsDir + '_'.join((pic_strings[0], '_'.join(types))) + ".txt"
+    if len(pics) != 0:
+      pic_strings = ["pic" + s for s in pics]
+      outfile = resultsDir + '_'.join((pic_strings[0], '_'.join(types))) + ".txt"
+    else:
+      outfile = resultsDir + 'crossvalid_' + '_'.join(types) + ".txt"
  
     of = open(outfile,'w')
+    # of = open('test.txt', 'w')
     of.write(metrics.classification_report(expected, predicted))
     of.write('\n\n')
     conf_matr = metrics.confusion_matrix(expected, predicted)
     of.write(str(conf_matr))
     of.close()
-
 
 if __name__ == '__main__':
   ap = argparse.ArgumentParser()

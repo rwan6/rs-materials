@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+# Program to resize images
+
 import os
 import sys
 import matplotlib.pyplot as plt
@@ -8,8 +10,8 @@ import numpy as np
 from PIL import Image
 from scipy.misc import imsave
 
-inputDir = '../rs-materials/rs_lr_pics/'
-outputDir = '../rs-materials/rs_resize_pics/'
+inputDir = '../rs-materials/rs_sr_pics/'
+outputDir = '../rs-materials/rs_res_sr_pics/'
 desDim = (600, 400)
 confirmDim = (400, 600, 3)
 

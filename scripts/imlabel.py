@@ -1,5 +1,9 @@
 #! /usr/bin/python
 
+# Program to label images. Image will appear on-screen, and user can then
+# close the image and label it as 0, 1, or u. Corresponding rgb, d, and
+# ir (if applicable) files will be renamed to include appropriate label
+
 import os
 import sys
 import copy
@@ -7,8 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 
-imageDir = '../rs_res_sr_pics/tiled/'
-picRange = (1,2)
+imageDir = '../rs-materials/rs_res_sr_pics/tiled/'
+picRange = (10,10)
 
 if picRange[1] < picRange[0]:
   print "Fix picRange so that first entry is >= second entry"

@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+# Program to plot results of image_classification.py
+
 import os
 import sys
 import glob
