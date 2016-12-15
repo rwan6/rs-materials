@@ -1,5 +1,9 @@
 #! /usr/bin/python
 
+# Script to take in images, decompose into features, classify using selected
+# supervised learning classifier, and display heatmap and classification
+# statistics.
+
 import sys
 import argparse
 import glob
@@ -15,11 +19,13 @@ try:
 except ImportError:
   import Image
 
+# Directories
 subfolder = "tiled"
 resultsDir = "../rs-materials/scripts/results_sr/"
-# folder = '../rs_res_sr_pics/'
 folder = '../rs-materials/rs_res_sr_pics/'
 folder_name = os.path.join(folder, subfolder, "*.bmp")
+
+# Results lists
 images1_list = []
 labels1_list = []
 images0_list = []
@@ -33,6 +39,7 @@ heatmap1_list = []
 
 file_tracker_list = []
 
+# Function to draw heatmap on top of raw image
 def draw_heatmap(pics, file_tracker_list, expected, predicted, hm, save, types):
     incorrect_files = []
     skin_files = []
@@ -150,6 +157,7 @@ def heatmap_images(types, pics):
         images1_list.append(cur_np_arr)
         labels1_list.append(cur_label)
 
+# Collect features for desired types
 def process_images(types):
   for filename in sorted(glob.glob(folder_name)):
     if types[0] not in filename:
@@ -178,6 +186,7 @@ def process_images(types):
       images1_list.append(cur_np_arr)
       labels1_list.append(cur_label)
 
+# Tune SVM parameters
 def tuneSVM(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test):
   losses = ['hinge', 'squared_hinge']
   penalties = ['l1', 'l2']
@@ -215,6 +224,9 @@ def tuneLR(X0train, X1train, X0test, X1test, y0train, y1train, y0test, y1test):
           predicted = classifier.predict(np.concatenate((X0test, X1test)))
           print 'Classification report for %s %s %f %s:\n%s\n' % (cf, p, c, mc, metrics.classification_report(expected, predicted))
 
+# Main function that takes in inputted parameters and determines which
+# classifier to use, whether a heatmap should be produced, what features to
+# use, and whether to save the image and its statistics or display it
 def main(classif, test0_size, test1_size, types, svmc, pics, hm, tune, save):
   # Read in tiled images
   if len(pics) == 0:

@@ -22,6 +22,7 @@ for resFile in glob.glob(resDir + 'crossvalid*.txt'):
   pic = fileSplit[0]
   types = ' '.join(fileSplit[1:-1])
   
+  # Open file for reading
   currFile = open(resFile, 'r')
   currFileLines = currFile.readlines()
   zeroData = currFileLines[2].split()
@@ -38,7 +39,7 @@ for resFile in glob.glob(resDir + 'crossvalid*.txt'):
   resMap[types] = mapData
   currFile.close()
 
-
+# Set up plotting configurations
 ind = np.arange(2)
 width = 0.25
 font = {'family' : 'normal',
@@ -47,6 +48,7 @@ font = {'family' : 'normal',
 
 matplotlib.rc('font', **font)
 
+# Create a plot for all feature types
 for k in resMap.keys():
   fig, ax = plt.subplots()
   rects1 = ax.bar(ind, (resMap[k])[0:2], width, color='r')

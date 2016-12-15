@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 
+# Image directory and range of pictures to scan through
 imageDir = '../rs-materials/rs_res_sr_pics/tiled/'
 picRange = (10,10)
 
+# Confirm picture range is valid
 if picRange[1] < picRange[0]:
   print "Fix picRange so that first entry is >= second entry"
   sys.exit(1)
@@ -21,6 +23,8 @@ if picRange[1] < picRange[0]:
 for currRGB in os.listdir(imageDir):
   currRGBSplit = currRGB.split('_')
   currPicNum = (currRGBSplit[0])[3:]
+  
+  # Confirm image to be labeled is valid
   if os.path.isfile(imageDir + currRGB) and \
     currRGB != '.DS_Store' and \
     currRGBSplit[1] == 'rgb' and \
@@ -29,12 +33,13 @@ for currRGB in os.listdir(imageDir):
     int(currPicNum) <= picRange[1]:
     print 'Now labeling', currRGB
     image = mpimg.imread(imageDir + currRGB)
-    plt.imshow(image)
+    plt.imshow(image) # Show image
     plt.draw()
     plt.pause(1)
     raw_input()
     plt.close()
 
+    # Make sure label is valid (0,1, or 'u')
     validLabel = False
     while not validLabel:
       label = raw_input('Enter the image label: ')
@@ -45,7 +50,7 @@ for currRGB in os.listdir(imageDir):
         print currRGB, 'was labeled as', label
         validLabel = True
 
-    # Find corresponding depth and ir image
+    # Find corresponding depth and ir image for labeling
     depthIm = currRGB.replace('rgb', 'd')
     irIm = currRGB.replace('rgb', 'ir')
     newRGB = currRGB.replace('res', label)

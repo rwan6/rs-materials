@@ -17,6 +17,7 @@ declare -a typeOptions=(
 # Counter up to maximum pictures
 i="1"
 
+# Gather results by iterating through all types of configurations
 while [ $i -le $maxPic ]; do
   for t in "${typeOptions[@]}"; do
     echo "==== Running classification for pic: "${i}" and type(s): "${t}" ===="
